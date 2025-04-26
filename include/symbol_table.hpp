@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
+#include <optional>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -22,7 +24,12 @@ class SymbolTable {
     ~SymbolTable(){}
     
     V lookup(const K& key) const {
-      return table.at(key);
+      try { 
+        return table.at(key);
+      } catch (const out_of_range& e) { // catch by const reference
+        cout << "Exception caught: key does not exist - ";
+        throw;
+      }
     }
 
     bool store(const K& key, const V& val) {
@@ -33,7 +40,7 @@ class SymbolTable {
           return true;
         }
         else {
-          string s = "object already exist";
+          string s = "key already exist";
           throw s;
         }
       } catch (const string& s) { // catch by const reference
