@@ -2,6 +2,7 @@
 *.d
 
 build/
+Testing/
 
 # Compiled Object files
 *.slo
