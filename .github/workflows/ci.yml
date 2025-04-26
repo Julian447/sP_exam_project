@@ -7,15 +7,14 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  run:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: configure
-      run: ./configure
     - name: run
       run: bash run.sh
+  run:
     - name: test
       run: bash test.sh
