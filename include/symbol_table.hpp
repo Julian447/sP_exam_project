@@ -24,12 +24,13 @@ class SymbolTable {
       return exist != table.end();
     }
 
-    void store(const T& t) {
+    bool store(const T& t) {
       try { 
         bool exists = lookup(t);
         if (!exists) {
           table.push_back(t);
           cout << "Stored object in table" << endl;
+          return true;
         }
         else {
           string s = "object already exist";
@@ -37,6 +38,7 @@ class SymbolTable {
         }
       } catch (const string& s) { // catch by const reference
         cout << "Exception caught: " << s << endl;
+        return false;
       }
     }
 };
