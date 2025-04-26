@@ -1,39 +1,35 @@
 #include "../include/symbol_table.hpp"
 #include <doctest/doctest.h>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 TEST_CASE("Symbol Table"){
-  auto s = SymbolTable<string>("foo");
-  s.store("foo");
-  s.store("bar");
-  CHECK(s.lookup("foo") == true);
-  CHECK(s.lookup("bar") == true);
-
-  SUBCASE("Integer") {
-  auto i = SymbolTable<int>(1);
-    CHECK(i.store(1) == false);
-    CHECK(i.store(2) == true);
-    CHECK(i.lookup(1) == true);
-    CHECK(i.lookup(2) == true);
-  }
+  auto s = SymbolTable<string,int>("foo",1);
+  CHECK(s.lookup("foo") == 1);
+  CHECK(s.store("foo",2) == false);
+  CHECK(s.store("bar",3) == true);
+  CHECK(s.lookup("foo") == 1);
+  CHECK(s.lookup("bar") == 3);
   
   SUBCASE("Const") {
-    auto const s1 = SymbolTable<string>("foo");
-    CHECK(s1.lookup("foo") == true);
-    CHECK(s1.lookup("bar") == false);
+    auto const s1 = SymbolTable<string,int>("foo",1);
+    CHECK(s1.lookup("foo"));
+    CHECK_THROWS_AS(s1.lookup("bar"), out_of_range);
   }
 
-  SUBCASE("With Starting Vector") {
-    vector<string> v = {"foo"};
-    auto s2 = SymbolTable<string>(v);
-    CHECK(s2.lookup("foo") == true);
-    CHECK(s2.lookup("bar") == false);
-    CHECK(s2.store("bar") == true);
-    CHECK(s2.lookup("bar") == true);
+  SUBCASE("With Starting Map") {
+    map<string,int> um = {{"foo",1}};
+    auto s2 = SymbolTable<string,int>(um);
+    CHECK(s2.lookup("foo"));
+    CHECK_THROWS_AS(s2.lookup("bar"), out_of_range);
+
+    CHECK(s2.store("bar", 1) == true);
+    CHECK(s2.lookup("bar"));
   }
-  
+
   SUBCASE("Inherit SymbolTable") {
-    auto s3 = SymbolTable<string>(s);
+    auto s3 = SymbolTable<string,int>(s);
     CHECK(s3.lookup("foo"));
     CHECK(s3.lookup("bar"));
   }

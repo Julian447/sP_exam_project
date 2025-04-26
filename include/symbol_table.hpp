@@ -1,34 +1,34 @@
 #include <algorithm>
 #include <iostream>
+#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 
 using namespace std;
 
-template<typename T>
+template<typename K, typename V>
 class SymbolTable {
-  vector<T> table;
+  map<K,V> table;
 
   public:
     SymbolTable(){}
-    SymbolTable(const T& t){
-      store(t);
+    SymbolTable(const K& k, const V& v){
+      store(k,v);
     }
-    SymbolTable(const vector<T>& vec) : table(vec) {}
-    SymbolTable(const SymbolTable<T>& st) : table(st.table) {}
+    SymbolTable(const map<K, V>& t) : table(t) {}
+    SymbolTable(const SymbolTable<K,V>& st) : table(st.table) {}
     ~SymbolTable(){}
     
-    bool lookup(const T& t) const {
-      auto exist = std::find_if(table.begin(), table.end(), [t](const auto& p) {return t == p;}); 
-      return exist != table.end();
+    V lookup(const K& key) const {
+      return table.at(key);
     }
 
-    bool store(const T& t) {
+    bool store(const K& key, const V& val) {
       try { 
-        bool exists = lookup(t);
-        if (!exists) {
-          table.push_back(t);
+        if (table.find(key) == table.end()) {
+          table.insert({key,val});
           cout << "Stored object in table" << endl;
           return true;
         }
