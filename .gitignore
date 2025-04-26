@@ -3,6 +3,7 @@
 
 build/
 Testing/
+.cache/
 
 # Compiled Object files
 *.slo
