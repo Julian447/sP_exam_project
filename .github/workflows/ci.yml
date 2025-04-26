@@ -15,6 +15,6 @@ jobs:
     - uses: actions/checkout@v4
     - name: run
       run: bash run.sh
-  run:
+  test:
     - name: test
       run: bash test.sh
