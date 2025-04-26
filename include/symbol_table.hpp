@@ -1,10 +1,8 @@
-#include <cxxabi.h>  // For abi::__cxa_demangle
 #include <algorithm>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
-#include <typeinfo>
+
 
 using namespace std;
 
@@ -17,6 +15,8 @@ class SymbolTable {
     SymbolTable(const T& t){
       store(t);
     }
+    SymbolTable(const vector<T>& vec) : table(vec) {}
+    SymbolTable(const SymbolTable<T>& st) : table(st.table) {}
     ~SymbolTable(){}
     
     bool lookup(const T& t) const {
