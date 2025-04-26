@@ -5,10 +5,9 @@
 ✅: finished ⚠️: need work/need review ❌: not finished/not begun
 | # | Status |
 | :--:  | :------: |
-| 0 | ❌ |
 | 1 | ❌ |
 | 2 | ❌ |
-| 3 | ❌ |
+| 3 | ⚠️ |
 | 4 | ❌ |
 | 5 | ❌ |
 | 6 | ❌ |
