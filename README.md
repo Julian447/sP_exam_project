@@ -1,7 +1,8 @@
 # sP_exam_project
+[Description](./pdfs/description.pdf)
 
-## Requirements
-[comment]: <> (✅ ⚠️ ❌ )
+## Requirements Status
+✅: finished ⚠️: need work/need review ❌: not finished/not begun
 | # | Status |
 | :--:  | :------: |
 | 0 | ❌ |
