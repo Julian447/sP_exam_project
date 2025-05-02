@@ -1,4 +1,4 @@
-#include "../include/symbol_table.hpp"
+#include <symbol_table.hpp>
 #include <doctest/doctest.h>
 #include <stdexcept>
 #include <string>

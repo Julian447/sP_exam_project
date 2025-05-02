@@ -1,23 +1,28 @@
 #include <cstdlib>
-#include <stdexcept>
-#include "include/symbol_table.hpp"
+#include <vessel.hpp>
 
 using namespace std;
 
 
 int main (int argc, char *argv[]) {
-  auto s = SymbolTable<string,int>("foo",1);
-  try {
-  cout << "found 'foo': " << s.lookup("foo") << endl;
-  cout << "found 'bar': " << s.lookup("bar") << endl;
-  } catch (const out_of_range& e) {
-    cerr << "Caught an exception in lookup: " << e.what() << endl;
-  }
-  cout << "stored 'foo': " << s.store("foo",2) << endl;
-  cout << "stored 'bar': " << s.store("bar",3) << endl;
-  cout << "found 'foo': " << s.lookup("foo") << endl;
-  cout << "found 'bar': " << s.lookup("bar") << endl;
-  cout << endl;
+  // auto s = SymbolTable<string,int>();
+  // s.store("A",0);
+  // s.store("DA",1);
+  // s.store("D_A",0);
+  auto v = stocasthic::Vessel();
+  v.environment();
+  auto A = v.add("A", 0);
+  auto DA = v.add("DA", 1);
+  auto D_A = v.add("D_A", 0);
+  float gammaA = 1;
+
+  // auto gammaA = 1;
+  // auto t = ((A + DA));
+  // auto t = ((A + DA) >> gammaA);
+  auto t = ((A + DA) >> gammaA >>= D_A);
+
+  // cout << t << endl;
+
 
   return 0;
 }
