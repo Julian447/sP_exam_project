@@ -1,4 +1,4 @@
-# add_library(symbol_table OBJECT symbol_table.cpp) 
+# add_library(reaction OBJECT reaction.cpp) 
 
 
 
