@@ -2,27 +2,45 @@
 #include <string>
 
 // #include <symbol_table.hpp>
-#include <reactant.hpp>
+#include <reaction.hpp>
 
 
 using namespace std;
 
-namespace stocasthic {
+namespace stochastic {
 
   class Vessel {
     string title;
-    shared_ptr<SymbolTable<string, int>> table_ptr;
+    unique_ptr<SymbolTable<string, float>> table_ptr;
   public: 
-    // Vessel(string s) : title(s) {}
-    void environment() {
-      table_ptr = shared_ptr<SymbolTable<string, int>>(new SymbolTable<string, int>());
+    Vessel(string s) : title(s) {
+      table_ptr = unique_ptr<SymbolTable<string, float>>(new SymbolTable<string, float>());
     }
+    int environment() {return 0; } //idk what to do with this
 
     template<typename K, typename V>
-    Reactant<K,V> add(K a, V b) {
+    Reaction<K,V> add(K a, V b) {
       table_ptr->store(a, b);
-      auto r = Reactant<K, V>{a,b,table_ptr};
+      auto r = Reaction<K, V>{a,b};
       return r;
+    }
+    template<typename K, typename V>
+    void add(const Reaction<K,V>&& r) {
+
+      for (auto& i : r.input_keys){
+        table_ptr->decrement(i);
+        // cout << "[Input] " << i << " " << table_ptr->lookup(i) << endl;
+      }
+      for (auto& i : r.product_keys){
+        table_ptr->increment(i);
+        // cout << "[Product] " << i << " " << table_ptr->lookup(i) << endl;
+      }
+      // cout << endl;
+      // table_ptr->print();
+      // cout << endl;
+    }
+    void print_table(){
+      table_ptr->print();
     }
   };
 }

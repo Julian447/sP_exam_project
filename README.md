@@ -5,7 +5,7 @@
 ✅: finished ⚠️: need work/need review ❌: not finished/not begun
 | # | Status |
 | :--:  | :------: |
-| 1 | ❌ |
+| 1 | ⚠️ |
 | 2 | ❌ |
 | 3 | ⚠️ |
 | 4 | ❌ |
@@ -26,6 +26,5 @@ conclusions into the report.
     - nothing is const by default (https://isocpp.org/wiki/faq/const-correctness )
 
 - doesn't have to use multithreading, can also optimize the reactions (i.e. don't subtract then add the same reactant, see last slides)
-- focus on symbol table?
 - for covid-19 example, use at least 10.000
 
