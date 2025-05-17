@@ -1,10 +1,12 @@
-#include <cstdlib>
+#include <algorithm>
 #include <vessel.hpp>
-// #include <vessel1.hpp>
+
+#include <chrono>
+#include <thread>
 
 using namespace std;
 
-stochastic::Vessel circadian_rhythm() {
+auto circadian_rhythm() {
   const auto alphaA = 50;
   const auto alpha_A = 500;
   const auto alphaR = 0.01;
@@ -50,26 +52,56 @@ stochastic::Vessel circadian_rhythm() {
   return v;
 }
 
+auto simple_example() {
+  auto v = stochastic::Vessel{};
+  const auto A = v.add("A", 100);
+  auto B = v.add("B", 0);
+  auto C = v.add("C", 1);
+  float gammaA = 0.001;
+  v.add((A + C) >> gammaA >>= B + C);
+
+  return v;
+}
+
+template<typename K = string, typename V = float>
+void simulation(auto& v, const auto end_time) { // dunno a way to avoid auto for vessel parameter
+  auto t = 0;
+  while (t <= end_time) {
+    //implement r.delay
+    for (Reaction<K,V>& r : v.reactions) {
+      map<K,V> m;
+      for (auto key : r.input)
+        m.insert({key,v.table_ptr->lookup(key)});
+
+      r.calculate_delay(m);
+    }
+    auto it = std::min_element(v.reactions.begin(), v.reactions.end(),
+                             [](const Reaction<K, V>& a, const Reaction<K, V>& b) {
+                               return a.delay < b.delay;
+                             });
+
+    if (it != v.reactions.end()) {
+      const auto& r = *it;
+      t += r.delay;
+      cout << "[Time] " << t << endl;
+      cout << "[Delay] " << r.delay << endl;
+      cout << "[Lambda] " << r.lambda << endl;
+      if (all_of(r.input.begin(), r.input.end(), [&](const K key){ return v.table_ptr->lookup(key) >= 0; })) {
+        v.do_reaction(r);
+      }
+      cout << endl;
+      //store state
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+  }
+}
+
 
 int main (int argc, char *argv[]) {
-  // auto s = SymbolTable<string,int>();
-  // s.store("A",0);
-  // s.store("DA",1);
-  // s.store("D_A",0);
-  // auto v = stochastic::Vessel{""};
-  // v.environment();
-  // const auto A = v.add("A", 0);
-  // auto DA = v.add("DA", 1);
-  // auto D_A = v.add("D_A", 0);
-  // float gammaA = 1;
-  // auto MA = v.add("MA", 0);
-  // float alpha_A = 500;
-  //
-  // v.add((A + DA) >> gammaA >>= D_A);
-  //
-  // v.add((D_A >> alpha_A >>= MA + D_A));
 
+  // auto v = simple_example();
   auto v = circadian_rhythm();
+  simulation(v, 2000);
   cout << endl;
   v.print_table();
 
