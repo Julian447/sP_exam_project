@@ -45,10 +45,10 @@ auto circadian_rhythm() {
   v.add(MR >> betaR >>= MR + R);
   v.add((A + R) >> gammaC >>= C);
   v.add(C >> deltaA >>= R);
-  // v.add(A >> deltaA >>= env);
-  // v.add(R >> deltaR >>= env);
-  // v.add(MA >> deltaMA >>= env);
-  // v.add(MR >> deltaMR >>= env);
+  v.add(A >> deltaA >>= env);
+  v.add(R >> deltaR >>= env);
+  v.add(MA >> deltaMA >>= env);
+  v.add(MR >> deltaMR >>= env);
   return v;
 }
 
@@ -65,33 +65,45 @@ auto simple_example() {
 
 template<typename K = string, typename V = float>
 void simulation(auto& v, const auto end_time) { // dunno a way to avoid auto for vessel parameter
-  auto t = 0;
+  double t = 0;
   while (t <= end_time) {
-    //implement r.delay
     for (Reaction<K,V>& r : v.reactions) {
-      map<K,V> m;
+      map<K,V> m = {};
       for (auto key : r.input)
         m.insert({key,v.table_ptr->lookup(key)});
 
       r.calculate_delay(m);
     }
-    auto it = std::min_element(v.reactions.begin(), v.reactions.end(),
-                             [](const Reaction<K, V>& a, const Reaction<K, V>& b) {
-                               return a.delay < b.delay;
-                             });
+
+    // auto it = std::min_element(v.reactions.begin(), v.reactions.end(),
+    //                          [](const Reaction<K, V>& a, const Reaction<K, V>& b) {
+    //                            return a.delay < b.delay;
+    //                          });
+
+    auto it = v.reactions.end();
+    for (auto iter = v.reactions.begin(); iter != v.reactions.end(); ++iter) {
+      if (iter->delay <= 0.0) continue;
+      if (it == v.reactions.end() || iter->delay < it->delay) {
+          it = iter;
+      }
+    }
 
     if (it != v.reactions.end()) {
       const auto& r = *it;
+      r.print_reaction();
+
       t += r.delay;
       cout << "[Time] " << t << endl;
       cout << "[Delay] " << r.delay << endl;
       cout << "[Lambda] " << r.lambda << endl;
-      if (all_of(r.input.begin(), r.input.end(), [&](const K key){ return v.table_ptr->lookup(key) >= 0; })) {
+      if (all_of(r.input.begin(), r.input.end(), [&](const K key){ return v.table_ptr->lookup(key) > 0; })) {
         v.do_reaction(r);
       }
+      // v.do_reaction(r);
       cout << endl;
       //store state
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+      // std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
   }
 }

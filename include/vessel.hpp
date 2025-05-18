@@ -19,7 +19,7 @@ namespace stochastic {
     Vessel(string s = "") : title(s) {
       table_ptr = unique_ptr<SymbolTable<K, V>>(new SymbolTable<K, V>());
     }
-    int environment() {return 0; } //idk what to do with this
+    string environment() {return "env"; } //idk what to do with this
     
     Reaction<K,V> add(K a, V b) {
       table_ptr->store(a, b);
