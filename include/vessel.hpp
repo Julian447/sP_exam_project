@@ -35,11 +35,11 @@ namespace stochastic {
     void do_reaction(const Reaction<K,V>& r) {
       for (auto& i : r.input){
         table_ptr->decrement(i);
-        cout << "[Input] " << i << " " << table_ptr->lookup(i) << endl;
+        // cout << "[Input] " << i << " " << table_ptr->lookup(i) << endl;
       }
       for (auto& i : r.product){
         table_ptr->increment(i);
-        cout << "[Product] " << i << " " << table_ptr->lookup(i) << endl;
+        // cout << "[Product] " << i << " " << table_ptr->lookup(i) << endl;
       }
     }
   };

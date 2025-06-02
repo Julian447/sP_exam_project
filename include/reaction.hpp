@@ -55,7 +55,7 @@ class Reaction {
     // for (auto const& [key, val] : inputs) {
     //     cout << key << "=" << val << " ";
     // }
-    cout << "[Reaction] Lambda: " << lambda << " | Product: " << product << " | Rate: " << rate << " | Delay: " << delay << endl;
+    // cout << "[Reaction] Lambda: " << lambda << " | Product: " << product << " | Rate: " << rate << " | Delay: " << delay << endl;
 }
 
   friend pair<Reaction, Reaction> operator+(Reaction const& lhs, Reaction const& rhs) {

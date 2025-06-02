@@ -1,4 +1,6 @@
 #include <iostream>
+#include <filesystem>
+#include <fstream>
 #include <map>
 #include <stdexcept>
 #include <string>
@@ -54,6 +56,34 @@ public:
       cout << "Exception caught: " << s << endl;
       return false;
     }
+  }
+
+  void save_state(float timestep) {
+    const std::string filename = "../data.csv";
+
+    bool file_exists = filesystem::exists(filename);
+
+    std::ofstream file(filename, ios::app);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file\n";
+        return;
+    }
+
+    if (!file_exists) {
+        file << "time";
+        for (const auto& [key, value] : table) {
+            file << "," << key;
+        }
+        file << "\n";
+    }
+
+    file << timestep;
+    for (const auto& [key, value] : table) {
+        file << "," << value;
+    }
+    file << "\n";
+
+    file.close();
   }
 };
 
