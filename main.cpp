@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <functional>
 #include <vessel.hpp>
 
 #include <chrono>
@@ -105,10 +106,13 @@ auto simple_example() {
   return v;
 }
 
+
 template<typename K = string, typename V = float>
-void simulation(auto& v, const auto end_time) { // dunno a way to avoid auto for vessel parameter
+void simulation(auto& v, const double end_time,
+                auto&& observer = nullptr) {
   double t = 0;
-  v.table_ptr->save_state(t);
+  observer(*v.table_ptr, t);
+
   while (t <= end_time) {
     for (Reaction<K,V>& r : v.reactions) {
       map<K,V> m = {};
@@ -117,11 +121,6 @@ void simulation(auto& v, const auto end_time) { // dunno a way to avoid auto for
 
       r.calculate_delay(m);
     }
-
-    // auto it = std::min_element(v.reactions.begin(), v.reactions.end(),
-    //                          [](const Reaction<K, V>& a, const Reaction<K, V>& b) {
-    //                            return a.delay < b.delay;
-    //                          });
 
     auto it = v.reactions.end();
     for (auto iter = v.reactions.begin(); iter != v.reactions.end(); ++iter) {
@@ -135,20 +134,14 @@ void simulation(auto& v, const auto end_time) { // dunno a way to avoid auto for
       const auto& r = *it;
       // r.print_reaction();
 
-      t += r.delay;
-      // cout << "[Time] " << t << endl;
-      // cout << "[Delay] " << r.delay << endl;
-      // cout << "[Lambda] " << r.lambda << endl;
       if (all_of(r.input.begin(), r.input.end(), [&](const K key){ return v.table_ptr->lookup(key) > 0; })) {
         v.do_reaction(r);
       }
-      // cout << "hit" << t << endl;
+
       //store state
-      v.table_ptr->save_state(t);
+      observer(*v.table_ptr, t);
 
-
-      // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-      // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      t += r.delay;
     }
   }
 }
@@ -158,15 +151,40 @@ void simulation(auto& v, const auto end_time) { // dunno a way to avoid auto for
 
 int main (int argc, char *argv[]) {
   remove_data();
+  auto N = 100;
 
+  auto full_logger = [](const SymbolTable<std::string, float>& table, double t) {
+    table.save_state(t);
+    cout << "\rProgress: " << fixed << setprecision(2) << t << flush;
+  };
 
+  auto peak_hospitalized = -1.0;
+  auto peak_time = -1.0;
+  auto peak_tracker = [&](const SymbolTable<std::string, float>& table, double t) {
+    float current = table.lookup("H");
+    if (current > peak_hospitalized) {
+      peak_hospitalized = current;
+      peak_time = t;
+    }
+    cout << "\rProgress: " << fixed << setprecision(2) << t << flush;
+  };
+  auto N_base = 10'000;
+  auto N_NJ = 590'000;
+  auto N_DK = 5'947'000;
+  
   // auto v = simple_example();
-  auto v = circadian_rhythm();
-  // auto v = seihr(10000);
-  // simulation(v, 100);
-  simulation(v, 48);
+  // auto v = circadian_rhythm();
+  auto v = seihr(N_base);
+  // auto v = seihr(N_NJ);
+  // auto v = seihr(N_DK);
+  // simulation(v, N);
+  simulation(v, N, full_logger);
+  // simulation(v, N, peak_tracker);
   cout << endl;
   v.print_table();
+  
+  if (peak_time != -1.0 && peak_hospitalized != -1.0)
+    cout << "Peak hospitalized: " << peak_hospitalized << " at time " << peak_time << endl;
 
   return 0;
 }

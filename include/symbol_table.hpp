@@ -58,7 +58,7 @@ public:
     }
   }
 
-  void save_state(float timestep) {
+  void save_state(float timestep) const {
     const std::string filename = "../data.csv";
 
     bool file_exists = filesystem::exists(filename);
