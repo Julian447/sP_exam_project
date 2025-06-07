@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <functional>
 #include <vessel.hpp>
 
 #include <chrono>
