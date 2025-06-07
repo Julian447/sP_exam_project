@@ -12,9 +12,9 @@
 | 5 | ⚠️ |
 | 6 | ⚠️ |
 | 7 | ✅ |
-| 8 | ❌ |
+| 8 | ⚠️ |
 | 9 | ⚠️ |
-| 10| ❌ |
+| 10| ⚠️ |
 
 **Make sure to include** testing and benchmarking code as well as the sample results, measurements, plots and
 conclusions into the report.

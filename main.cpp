@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <future>
 #include <vessel.hpp>
 
 #include <chrono>
@@ -146,6 +147,74 @@ void simulation(auto& v, const double end_time,
 }
 
 
+template<typename K = string, typename V = float>
+void simulation_parallel(auto& v, const double end_time,
+                auto&& observer = nullptr) {
+  double t = 0;
+  observer(*v.table_ptr, t);
+
+  std::mutex reaction_mutex;
+  while (t <= end_time) {
+    std::vector<std::future<void>> futures;
+
+    for (Reaction<K,V>& r : v.reactions) {
+      futures.push_back(std::async(std::launch::async, [&]() {
+        std::map<K,V> m = {};
+        for (auto key : r.input)
+          m.insert({key, v.table_ptr->lookup(key)});
+
+        r.calculate_delay(m);
+      }));
+    }
+
+    for (auto& f : futures) {
+      f.get(); // Wait for all threads to complete
+    }
+
+    auto it = v.reactions.end();
+    for (auto iter = v.reactions.begin(); iter != v.reactions.end(); ++iter) {
+      if (iter->delay <= 0.0) continue;
+      if (it == v.reactions.end() || iter->delay < it->delay) {
+          it = iter;
+      }
+    }
+
+    if (it != v.reactions.end()) {
+      const auto& r = *it;
+      // r.print_reaction();
+
+      if (std::all_of(r.input.begin(), r.input.end(), [&](const K key){ return v.table_ptr->lookup(key) > 0; })) {
+        std::lock_guard<std::mutex> lock(reaction_mutex);
+        v.do_reaction(r);
+      }
+
+      //store state
+      observer(*v.table_ptr, t);
+
+      t += r.delay;
+    }
+  }
+}
+
+void benchmark_simulation(auto& v, const double end_time, auto&& observer) {
+    using namespace std::chrono;
+
+    std::cout << "Benchmarking single-core simulation...\n";
+    auto v_single = v; // Create a new copy for single-core simulation
+    auto start_single = high_resolution_clock::now();
+    simulation(v_single, end_time, observer);
+    auto end_single = high_resolution_clock::now();
+    auto duration_single = duration_cast<milliseconds>(end_single - start_single).count();
+    std::cout << "\rSingle-core simulation completed in " << duration_single << " ms.\n";
+
+    std::cout << "Benchmarking multi-core simulation...\n";
+    auto v_multi = v; // Create a new copy for multi-core simulation
+    auto start_multi = high_resolution_clock::now();
+    simulation_parallel(v_multi, end_time, observer);
+    auto end_multi = high_resolution_clock::now();
+    auto duration_multi = duration_cast<milliseconds>(end_multi - start_multi).count();
+    std::cout << "\rMulti-core simulation completed in " << duration_multi << " ms.\n";
+}
 
 
 int main (int argc, char *argv[]) {
@@ -167,20 +236,26 @@ int main (int argc, char *argv[]) {
     }
     cout << "\rProgress: " << fixed << setprecision(2) << t << flush;
   };
+
   auto N_base = 10'000;
   auto N_NJ = 590'000;
   auto N_DK = 5'947'000;
   
   // auto v = simple_example();
   // auto v = circadian_rhythm();
-  auto v = seihr(N_base);
-  // auto v = seihr(N_NJ);
+  // auto v = seihr(N_base);
+  auto v = seihr(N_NJ);
   // auto v = seihr(N_DK);
   // simulation(v, N);
-  simulation(v, N, full_logger);
+  // simulation(v, N, full_logger);
   // simulation(v, N, peak_tracker);
+  // simulation_parallel(v, N, peak_tracker); 
+  benchmark_simulation(v, N, peak_tracker);
+
+
+  
   cout << endl;
-  v.print_table();
+  // v.print_table();
   
   if (peak_time != -1.0 && peak_hospitalized != -1.0)
     cout << "Peak hospitalized: " << peak_hospitalized << " at time " << peak_time << endl;

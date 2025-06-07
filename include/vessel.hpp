@@ -16,9 +16,16 @@ namespace stochastic {
   public: 
     vector<Reaction<K,V>> reactions;
     unique_ptr<SymbolTable<K, V>> table_ptr;
+
     Vessel(string s = "") : title(s) {
       table_ptr = unique_ptr<SymbolTable<K, V>>(new SymbolTable<K, V>());
     }
+
+    // Copy constructor
+    Vessel(const Vessel& other) : title(other.title), reactions(other.reactions) {
+      table_ptr = unique_ptr<SymbolTable<K, V>>(new SymbolTable<K, V>(*other.table_ptr));
+    }
+
     string environment() {return "env"; } //idk what to do with this
     
     Reaction<K,V> add(K a, V b) {
