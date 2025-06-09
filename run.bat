@@ -4,3 +4,4 @@ cmake --build . --config Release
 echo.
 
 main.exe
+
