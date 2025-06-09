@@ -143,8 +143,8 @@ void simulation(stochastic::Vessel<K,V>& v, const double end_time,
 
       t += r.delay;
     } else {
-    // std::cout << "Simulation " << t << " stopped early: no valid reactions left." << std::endl;
-    break; // No reactions left with positive delay, stop
+      // std::cout << "Simulation " << t << " stopped early: no valid reactions left." << std::endl;
+      break;
     }
   }
 }
@@ -210,14 +210,6 @@ void run_multiple_simulations(stochastic::Vessel<K, V>& v, const double end_time
 void benchmark_simulation(auto& v, const double end_time, auto&& observer, int N_multi, int max_concurrent) {
   using namespace std::chrono;
 
-  // std::cout << "\nBenchmarking single-core simulation...\n";
-  // auto v_single = v; // Create a new copy for single-core simulation
-  // auto start_single = high_resolution_clock::now();
-  // simulation(v_single, end_time, observer);
-  // auto end_single = high_resolution_clock::now();
-  // auto duration_single = duration_cast<milliseconds>(end_single - start_single).count();
-  // std::cout << "\rSingle-core simulation completed in " << duration_single << " ms.\n";
-
   std::cout << "\nBenchmarking simulations...\n";
   auto start_multi = high_resolution_clock::now();
   run_multiple_simulations(v, end_time, N_multi, max_concurrent, observer);
@@ -258,21 +250,19 @@ int main (int argc, char *argv[]) {
   auto v = seihr(N_base);
   // auto v = seihr(N_NJ);
   // auto v = seihr(N_DK);
-  // auto v_cpy = v;
-  // simulation(v, N);
   // simulation(v, N, full_logger);
   // simulation(v_cpy, N, peak_tracker);
 
-  // benchmark_simulation(v, N, peak_tracker, 5, 1); 
-  // benchmark_simulation(v, N, peak_tracker, 5, 2); 
-  // benchmark_simulation(v, N, peak_tracker, 5, 4);
+  benchmark_simulation(v, N, peak_tracker, 5, 1); 
+  benchmark_simulation(v, N, peak_tracker, 5, 2); 
+  benchmark_simulation(v, N, peak_tracker, 5, 4);
   // benchmark_simulation(v, N, peak_tracker, 5, 8); 
  
-  benchmark_simulation(v, N, peak_tracker, 100, 1);
-  benchmark_simulation(v, N, peak_tracker, 100, 2);
-  benchmark_simulation(v, N, peak_tracker, 100, 6);
+  // benchmark_simulation(v, N, peak_tracker, 100, 1);
+  // benchmark_simulation(v, N, peak_tracker, 100, 2);
+  // benchmark_simulation(v, N, peak_tracker, 100, 6);
   // benchmark_simulation(v, N, peak_tracker, 100, 8);
-  benchmark_simulation(v, N, peak_tracker, 100, 12);
+  // benchmark_simulation(v, N, peak_tracker, 100, 12);
 
   cout << endl;
 
