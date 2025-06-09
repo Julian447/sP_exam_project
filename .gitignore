@@ -1,5 +1,8 @@
 .venv
 build
+.vscode
+.cache
+
 
 # Prerequisites
 *.d

@@ -1,6 +1,7 @@
 #include <algorithm>
-#include <functional>
+#include <future>
 #include <vessel.hpp>
+#include <semaphore>
 
 #include <chrono>
 #include <thread>
@@ -102,13 +103,12 @@ auto simple_example() {
   auto C = v.add("C", 1);
   float gammaA = 0.001;
   v.add((A + C) >> gammaA >>= B + C);
-
   return v;
 }
 
 
 template<typename K = string, typename V = float>
-void simulation(auto& v, const double end_time,
+void simulation(stochastic::Vessel<K,V>& v, const double end_time,
                 auto&& observer = nullptr) {
   double t = 0;
   observer(*v.table_ptr, t);
@@ -142,15 +142,87 @@ void simulation(auto& v, const double end_time,
       observer(*v.table_ptr, t);
 
       t += r.delay;
+    } else {
+      // std::cout << "Simulation " << t << " stopped early: no valid reactions left." << std::endl;
+      break;
     }
   }
 }
 
+template<typename K = string, typename V = float>
+void run_multiple_simulations(stochastic::Vessel<K, V>& v, const double end_time, 
+                              size_t num_simulations, size_t max_concurrent, auto&& observer = nullptr) {
+  std::vector<std::pair<double, double>> results(num_simulations); // Store results directly
+  std::atomic<size_t> completed_runs = 0;
 
+  auto worker = [&](size_t start, size_t end) {
+    for (size_t i = start; i < end; ++i) {
+      auto v_copy = v; // Create a new copy for each simulation
+      double peak_hospitalized = -1.0;
+      double peak_time = -1.0;
+
+      auto peak_tracker = [&](const SymbolTable<K, V>& table, double t) {
+        float current = table.lookup("H");
+        if (current > peak_hospitalized) {
+          peak_hospitalized = current;
+          peak_time = t;
+        }
+      };
+
+      simulation(v_copy, end_time, peak_tracker);
+      ++completed_runs;
+      std::cout << "\rCompleted simulations: " << completed_runs << " / " << num_simulations << std::flush;
+      results[i] = std::make_pair(peak_hospitalized, peak_time); // Store results directly
+    }
+  };
+
+  size_t batch_size = (num_simulations + max_concurrent - 1) / max_concurrent;
+  std::vector<std::thread> threads;
+
+  for (size_t i = 0; i < max_concurrent; ++i) {
+    size_t start = i * batch_size;
+    size_t end = std::min(start + batch_size, num_simulations);
+    if (start < end) {
+      threads.emplace_back(worker, start, end);
+    }
+  }
+
+  for (auto& thread : threads) {
+    thread.join();
+  }
+
+  double total_peak_hospitalized = 0.0;
+  double total_peak_time = 0.0;
+
+  for (const auto& result : results) {
+    total_peak_hospitalized += result.first;
+    total_peak_time += result.second;
+  }
+
+  double avg_peak_hospitalized = total_peak_hospitalized / num_simulations;
+  double avg_peak_time = total_peak_time / num_simulations;
+
+  std::cout << "\nAverage peak hospitalized: " << avg_peak_hospitalized 
+            << " at average time: " << avg_peak_time << std::endl;
+}
+
+
+void benchmark_simulation(auto& v, const double end_time, auto&& observer, int N_multi, int max_concurrent) {
+  using namespace std::chrono;
+
+  std::cout << "\nBenchmarking simulations...\n";
+  auto start_multi = high_resolution_clock::now();
+  run_multiple_simulations(v, end_time, N_multi, max_concurrent, observer);
+  auto end_multi = high_resolution_clock::now();
+  auto duration_multi = duration_cast<milliseconds>(end_multi - start_multi).count();
+  std::cout << "\rSimulations completed in " << duration_multi << " ms.\n";
+}
 
 
 int main (int argc, char *argv[]) {
   remove_data();
+
+  auto start = chrono::high_resolution_clock::now();
   auto N = 100;
 
   auto full_logger = [](const SymbolTable<std::string, float>& table, double t) {
@@ -166,25 +238,42 @@ int main (int argc, char *argv[]) {
       peak_hospitalized = current;
       peak_time = t;
     }
-    cout << "\rProgress: " << fixed << setprecision(2) << t << flush;
+    // cout << "\rProgress: " << fixed << setprecision(2) << t << flush;
   };
+
   auto N_base = 10'000;
   auto N_NJ = 590'000;
   auto N_DK = 5'947'000;
-  
+
   // auto v = simple_example();
   // auto v = circadian_rhythm();
   auto v = seihr(N_base);
   // auto v = seihr(N_NJ);
   // auto v = seihr(N_DK);
-  // simulation(v, N);
-  simulation(v, N, full_logger);
-  // simulation(v, N, peak_tracker);
+  // simulation(v, N, full_logger);
+  // simulation(v_cpy, N, peak_tracker);
+
+  benchmark_simulation(v, N, peak_tracker, 5, 1); 
+  benchmark_simulation(v, N, peak_tracker, 5, 2); 
+  benchmark_simulation(v, N, peak_tracker, 5, 4);
+  // benchmark_simulation(v, N, peak_tracker, 5, 8); 
+ 
+  // benchmark_simulation(v, N, peak_tracker, 100, 1);
+  // benchmark_simulation(v, N, peak_tracker, 100, 2);
+  // benchmark_simulation(v, N, peak_tracker, 100, 6);
+  // benchmark_simulation(v, N, peak_tracker, 100, 8);
+  // benchmark_simulation(v, N, peak_tracker, 100, 12);
+
   cout << endl;
-  v.print_table();
-  
+
   if (peak_time != -1.0 && peak_hospitalized != -1.0)
     cout << "Peak hospitalized: " << peak_hospitalized << " at time " << peak_time << endl;
+
+  auto end = chrono::high_resolution_clock::now();
+
+  chrono::duration<double> duration = end - start;
+
+  cout << "Total execution time: " << std::fixed << setprecision(4) << duration.count() << " seconds" << endl;
 
   return 0;
 }

@@ -12,7 +12,9 @@ include(cmake/sanitizers.cmake)
 include(cmake/doctest.cmake)
 include(cmake/benchmark.cmake)
 
-include_directories(include)
+# include_directories(include)
+add_library(vessel INTERFACE)
+target_include_directories(vessel INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_library(symbol_table INTERFACE)
 
 enable_testing()
@@ -22,6 +24,6 @@ add_subdirectory(tests)
 
 
 add_executable(main main.cpp)
-# target_link_libraries(main PRIVATE symbol_table) 
+target_link_libraries(main PRIVATE vessel) 
 
 
