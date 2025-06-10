@@ -20,6 +20,7 @@ class Reaction {
     Reaction() {}
     Reaction(K k, V v) : key(k), val(v) {}
 
+  K get_key() const { return key; }
   void calculate_delay(const map<K,V>& inputs) {
     if (inputs.empty()) {
       return;
