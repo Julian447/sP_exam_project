@@ -25,7 +25,7 @@ void remove_data() {
 }
 
 auto seihr(uint32_t N) {
-  auto v = stochastic::Vessel{"COVID19 SEIHR: " + std::to_string(N)};
+  auto v = Vessel{"COVID19 SEIHR: " + std::to_string(N)};
   const auto eps = 0.0009; // initial fraction of infectious
   const auto I0 = size_t(std::round(eps * N)); // initial infectious
   const auto E0 = size_t(std::round(eps * N * 15)); // initial exposed
@@ -66,7 +66,7 @@ auto circadian_rhythm() {
   const auto deltaMR = 0.5;
   const auto thetaA = 50;
   const auto thetaR = 100;
-  auto v = stochastic::Vessel{"Circadian Rhythm"};
+  auto v = Vessel{"Circadian Rhythm"};
   const auto env = v.environment();
   const auto DA = v.add("DA", 1);
   const auto D_A = v.add("D_A", 0);
@@ -96,8 +96,26 @@ auto circadian_rhythm() {
   return v;
 }
 
-auto simple_example() {
-  auto v = stochastic::Vessel{};
+auto simple_example1() {
+  auto v = Vessel{};
+  const auto A = v.add("A", 100);
+  auto B = v.add("B", 0);
+  auto C = v.add("C", 1);
+  float gammaA = 0.001;
+  v.add((A + C) >> gammaA >>= B + C);
+  return v;
+}
+auto simple_example2() {
+  auto v = Vessel{};
+  const auto A = v.add("A", 100);
+  auto B = v.add("B", 0);
+  auto C = v.add("C", 2);
+  float gammaA = 0.001;
+  v.add((A + C) >> gammaA >>= B + C);
+  return v;
+}
+auto simple_example3() {
+  auto v = Vessel{};
   const auto A = v.add("A", 50);
   auto B = v.add("B", 50);
   auto C = v.add("C", 1);
@@ -106,9 +124,8 @@ auto simple_example() {
   return v;
 }
 
-
 template<typename K = string, typename V = float>
-void simulation(stochastic::Vessel<K,V>& v, const double end_time,
+void simulation(Vessel<K,V>& v, const double end_time,
                 auto&& observer = nullptr) {
   double t = 0;
   observer(*v.table_ptr, t);
@@ -150,7 +167,7 @@ void simulation(stochastic::Vessel<K,V>& v, const double end_time,
 }
 
 template<typename K = string, typename V = float>
-void run_multiple_simulations(stochastic::Vessel<K, V>& v, const double end_time, 
+void run_multiple_simulations(Vessel<K, V>& v, const double end_time, 
                               size_t num_simulations, size_t max_concurrent, auto&& observer = nullptr) {
   std::vector<std::pair<double, double>> results(num_simulations); // Store results directly
   std::atomic<size_t> completed_runs = 0;
@@ -223,8 +240,10 @@ int main (int argc, char *argv[]) {
   remove_data();
 
   auto start = chrono::high_resolution_clock::now();
-  auto N = 100;
 
+  auto no_logger = [](const SymbolTable<std::string, float>& table, double t) {
+    cout << "\rProgress: " << fixed << setprecision(2) << t << flush;
+  };
   auto full_logger = [](const SymbolTable<std::string, float>& table, double t) {
     table.save_state(t);
     cout << "\rProgress: " << fixed << setprecision(2) << t << flush;
@@ -241,21 +260,26 @@ int main (int argc, char *argv[]) {
     // cout << "\rProgress: " << fixed << setprecision(2) << t << flush;
   };
 
+  auto N = 100;
   auto N_base = 10'000;
   auto N_NJ = 590'000;
   auto N_DK = 5'947'000;
 
-  // auto v = simple_example();
+  // auto v = simple_example1();
+  // auto v = simple_example2();
+  // auto v = simple_example3();
   // auto v = circadian_rhythm();
   auto v = seihr(N_base);
+  // v.print_table();
   // auto v = seihr(N_NJ);
   // auto v = seihr(N_DK);
+  // simulation(v, N, no_logger);
   // simulation(v, N, full_logger);
-  // simulation(v_cpy, N, peak_tracker);
+  // simulation(v, N, peak_tracker);
 
   benchmark_simulation(v, N, peak_tracker, 5, 1); 
-  benchmark_simulation(v, N, peak_tracker, 5, 2); 
-  benchmark_simulation(v, N, peak_tracker, 5, 4);
+  // benchmark_simulation(v, N, peak_tracker, 5, 2); 
+  // benchmark_simulation(v, N, peak_tracker, 5, 4);
   // benchmark_simulation(v, N, peak_tracker, 5, 8); 
  
   // benchmark_simulation(v, N, peak_tracker, 100, 1);
@@ -265,6 +289,7 @@ int main (int argc, char *argv[]) {
   // benchmark_simulation(v, N, peak_tracker, 100, 12);
 
   cout << endl;
+  v.print_table();
 
   if (peak_time != -1.0 && peak_hospitalized != -1.0)
     cout << "Peak hospitalized: " << peak_hospitalized << " at time " << peak_time << endl;

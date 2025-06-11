@@ -9,64 +9,57 @@
 
 using namespace std;
 
-namespace stochastic {
+template<typename K = string, typename V = float>
+class Vessel {
+  string title;
 
-  template<typename K = string, typename V = float>
-  class Vessel {
-    string title;
-  public: 
-    // mutex simulation_mutex;
-    vector<Reaction<K,V>> reactions;
-    unique_ptr<SymbolTable<K, V>> table_ptr;
+public:
+  vector<Reaction<K, V>> reactions;
+  unique_ptr<SymbolTable<K, V>> table_ptr;
 
-    Vessel(string s = "") : title(s) {
-      table_ptr = unique_ptr<SymbolTable<K, V>>(new SymbolTable<K, V>());
-    }
+  Vessel(string s = "") : title(s) {
+    table_ptr = make_unique<SymbolTable<K, V>>();
+  }
 
-    // Copy constructor
-    Vessel(const Vessel& other) : title(other.title), reactions(other.reactions) {
-      table_ptr = unique_ptr<SymbolTable<K, V>>(new SymbolTable<K, V>(*other.table_ptr));
-    }
+  // Copy constructor
+  Vessel(const Vessel& other)
+    : title(other.title), reactions(other.reactions) {
+    table_ptr = make_unique<SymbolTable<K, V>>(*other.table_ptr);
+  }
 
-    string environment() {return "env"; } //idk what to do with this
-    
-    Reaction<K,V> add(K a, V b) {
-      // lock_guard<mutex> lock(simulation_mutex);
-      table_ptr->store(a, b);
-      auto r = Reaction<K, V>{a,b};
-      return r;
-    }
-    void add(const Reaction<K,V>&& r) {
-      reactions.push_back(r);
-    }
-    void print_table(){
-      // lock_guard<mutex> lock(simulation_mutex);
-      table_ptr->print();
-    }
-    void do_reaction(const Reaction<K,V>& r) {
-      // lock_guard<mutex> lock(simulation_mutex);
-      for (auto& i : r.input){
-        table_ptr->decrement(i);
-        // cout << "[Input] " << i << " " << table_ptr->lookup(i) << endl;
-      }
-      for (auto& i : r.product){
-        table_ptr->increment(i);
-        // cout << "[Product] " << i << " " << table_ptr->lookup(i) << endl;
-      }
-    }
-    void do_reaction_concurrent(const Reaction<K,V>& r, mutex& external_mutex) {
-      lock_guard<mutex> lock(external_mutex);
-      for (auto& i : r.input){
-        table_ptr->decrement(i);
-        // cout << "[Input] " << i << " " << table_ptr->lookup(i) << endl;
-      }
-      for (auto& i : r.product){
-        table_ptr->increment(i);
-        // cout << "[Product] " << i << " " << table_ptr->lookup(i) << endl;
-      }
-    }
-  };
-}
+  string environment() { return "env"; }
 
+  Reaction<K, V> add(K a, V b) {
+    table_ptr->store(a, b);
+    return Reaction<K, V>{a, b};
+  }
+
+  void add(const Reaction<K, V>&& r) {
+    reactions.push_back(r);
+  }
+
+  void print_table() {
+    table_ptr->print();
+  }
+
+  void do_reaction(const Reaction<K, V>& r) {
+    for (const auto& i : r.input) {
+      table_ptr->decrement(i);
+    }
+    for (const auto& i : r.product) {
+      table_ptr->increment(i);
+    }
+  }
+
+  void do_reaction_concurrent(const Reaction<K, V>& r, mutex& external_mutex) {
+    lock_guard<mutex> lock(external_mutex);
+    for (const auto& i : r.input) {
+      table_ptr->decrement(i);
+    }
+    for (const auto& i : r.product) {
+      table_ptr->increment(i);
+    }
+  }
+};
 
 
