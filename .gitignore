@@ -3,6 +3,13 @@ build
 .vscode
 .cache
 
+/*.aux
+*.log
+*.pdf
+**/listing.*
+!*.tex
+# !listing.pdf
+
 
 # Prerequisites
 *.d

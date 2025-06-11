@@ -12,13 +12,13 @@ template<typename K, typename V>
 class Reaction {
   K key;
   V val;
-  public:
-    vector<K> input;
-    double lambda;
-    vector<K> product;
-    double delay = 0;
-    Reaction() {}
-    Reaction(K k, V v) : key(k), val(v) {}
+public:
+  vector<K> input;
+  double lambda;
+  vector<K> product;
+  double delay = 0;
+  Reaction() {}
+  Reaction(K k, V v) : key(k), val(v) {}
 
   K get_key() const { return key; }
   void calculate_delay(const map<K,V>& inputs) {
@@ -27,19 +27,13 @@ class Reaction {
     }
 
     double product = 1.0;
-    // cout << "Inputs for reaction: ";
     for (auto const& pair : inputs) {
-      // cout << key << ": " << val << ", ";
-      // cout << key << " " << val << endl;
       product *= pair.second;
     }
-    // cout << endl;
 
     double rate = lambda * product;
-    // cout << "Lambda: " << lambda << ", Product: " << product << ", Rate: " << rate << endl;
 
     if (rate <= 0.0) {
-      // cout << "Rate is non-positive, delay not calculated." << endl;
       delay = 0.0;
       return;
     }
@@ -49,15 +43,7 @@ class Reaction {
     exponential_distribution<> distribution(rate);
 
     delay = distribution(gen);
-    // cout << "Calculated delay: " << delay << endl;
-
-    // Debugging output
-    // cout << "[Reaction] Inputs: ";
-    // for (auto const& [key, val] : inputs) {
-    //     cout << key << "=" << val << " ";
-    // }
-    // cout << "[Reaction] Lambda: " << lambda << " | Product: " << product << " | Rate: " << rate << " | Delay: " << delay << endl;
-}
+  }
 
   friend pair<Reaction, Reaction> operator+(Reaction const& lhs, Reaction const& rhs) {
     return make_pair(lhs, rhs);
@@ -95,14 +81,10 @@ class Reaction {
     return r;
   }
   friend Reaction operator>>=(Reaction lhs, const string& rhs) { 
-    // Reaction r = lhs;
-    // r.insertProductKeys(rhs);
-
     return lhs;
   }
 
   void insertKeys(const Reaction& other) {
-    // Insert other's key into this->input if not already there
     if (std::find(input.begin(), input.end(), other.key) == input.end()) {
       input.push_back(other.key);
     }
