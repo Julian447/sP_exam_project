@@ -10,7 +10,6 @@ set(BUILD_SHARED_LIBS OFF)
 
 include(cmake/sanitizers.cmake)
 include(cmake/doctest.cmake)
-include(cmake/benchmark.cmake)
 
 # include_directories(include)
 add_library(vessel INTERFACE)

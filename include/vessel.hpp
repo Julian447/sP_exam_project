@@ -39,6 +39,15 @@ public:
   }
 
   void print_table() {
+    string dashes(10, '-');
+
+    cout << dashes << "Start Table" << dashes << endl;
+    table_ptr->print();
+    cout << dashes << "Reactions" << dashes << endl;
+    for (const Reaction<K,V>& r : reactions) {
+      r.print_reaction();
+    }
+    cout << dashes << "End Table" << dashes << endl;
     table_ptr->print();
   }
 

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <set>
 #include <utility>
+#include <algorithm>
 
 #include <symbol_table.hpp>
 #include <vector>
