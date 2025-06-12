@@ -1,10 +1,8 @@
 #include <memory>
-#include <mutex>
 #include <string>
-
-// #include <symbol_table.hpp>
-#include <reaction.hpp>
 #include <vector>
+
+#include <reaction.hpp>
 
 
 using namespace std;
@@ -21,7 +19,6 @@ public:
     table_ptr = make_unique<SymbolTable<K, V>>();
   }
 
-  // Copy constructor
   Vessel(const Vessel& other)
     : title(other.title), reactions(other.reactions) {
     table_ptr = make_unique<SymbolTable<K, V>>(*other.table_ptr);
@@ -38,8 +35,18 @@ public:
     reactions.push_back(r);
   }
 
+  void do_reaction(const Reaction<K, V>& r) {
+    for (const auto& i : r.input) {
+      table_ptr->decrement(i);
+    }
+    for (const auto& i : r.product) {
+      table_ptr->increment(i);
+    }
+  }
+
   void print_table() {
-    string dashes(10, '-');
+    constexpr int dash_count = 10;
+    string dashes(dash_count, '-');
 
     cout << dashes << "Start Table" << dashes << endl;
     table_ptr->print();
@@ -50,25 +57,4 @@ public:
     cout << dashes << "End Table" << dashes << endl;
     table_ptr->print();
   }
-
-  void do_reaction(const Reaction<K, V>& r) {
-    for (const auto& i : r.input) {
-      table_ptr->decrement(i);
-    }
-    for (const auto& i : r.product) {
-      table_ptr->increment(i);
-    }
-  }
-
-  void do_reaction_concurrent(const Reaction<K, V>& r, mutex& external_mutex) {
-    lock_guard<mutex> lock(external_mutex);
-    for (const auto& i : r.input) {
-      table_ptr->decrement(i);
-    }
-    for (const auto& i : r.product) {
-      table_ptr->increment(i);
-    }
-  }
 };
-
-

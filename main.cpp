@@ -160,7 +160,6 @@ void simulation(Vessel<K,V>& v, const double end_time,
 
       t += r.delay;
     } else {
-      // std::cout << "Simulation " << t << " stopped early: no valid reactions left." << std::endl;
       break;
     }
   }
@@ -169,12 +168,12 @@ void simulation(Vessel<K,V>& v, const double end_time,
 template<typename K = string, typename V = float>
 void run_multiple_simulations(Vessel<K, V>& v, const double end_time, 
                               size_t num_simulations, size_t max_concurrent, auto&& observer = nullptr) {
-  std::vector<std::pair<double, double>> results(num_simulations); // Store results directly
+  std::vector<std::pair<double, double>> results(num_simulations);
   std::atomic<size_t> completed_runs = 0;
 
   auto worker = [&](size_t start, size_t end) {
     for (size_t i = start; i < end; ++i) {
-      auto v_copy = v; // Create a new copy for each simulation
+      auto v_copy = v;
       double peak_hospitalized = -1.0;
       double peak_time = -1.0;
 
@@ -189,7 +188,7 @@ void run_multiple_simulations(Vessel<K, V>& v, const double end_time,
       simulation(v_copy, end_time, peak_tracker);
       ++completed_runs;
       std::cout << "\rCompleted simulations: " << completed_runs << " / " << num_simulations << std::flush;
-      results[i] = std::make_pair(peak_hospitalized, peak_time); // Store results directly
+      results[i] = std::make_pair(peak_hospitalized, peak_time);
     }
   };
 
@@ -257,10 +256,11 @@ int main (int argc, char *argv[]) {
       peak_hospitalized = current;
       peak_time = t;
     }
-    // cout << "\rProgress: " << fixed << setprecision(2) << t << flush;
+    cout << "\rProgress: " << fixed << setprecision(2) << t << flush;
   };
 
   auto N = 100;
+  auto N_simple = 2000;
   auto N_base = 10'000;
   auto N_NJ = 590'000;
   auto N_DK = 5'947'000;
@@ -270,14 +270,13 @@ int main (int argc, char *argv[]) {
   // auto v = simple_example3();
   // auto v = circadian_rhythm();
   auto v = seihr(N_base);
-  // v.print_table();
   // auto v = seihr(N_NJ);
   // auto v = seihr(N_DK);
-  // simulation(v, N, no_logger);
+  // simulation(v, N_simple, no_logger);
   // simulation(v, N, full_logger);
-  // simulation(v, N, peak_tracker);
+  simulation(v, N, peak_tracker);
 
-  benchmark_simulation(v, N, peak_tracker, 5, 1); 
+  // benchmark_simulation(v, N, peak_tracker, 5, 1); 
   // benchmark_simulation(v, N, peak_tracker, 5, 2); 
   // benchmark_simulation(v, N, peak_tracker, 5, 4);
   // benchmark_simulation(v, N, peak_tracker, 5, 8); 
@@ -289,7 +288,7 @@ int main (int argc, char *argv[]) {
   // benchmark_simulation(v, N, peak_tracker, 100, 12);
 
   cout << endl;
-  v.print_table();
+  // v.print_table();
 
   if (peak_time != -1.0 && peak_hospitalized != -1.0)
     cout << "Peak hospitalized: " << peak_hospitalized << " at time " << peak_time << endl;
