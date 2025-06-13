@@ -45,7 +45,7 @@ public:
   }
 
   void print_table() {
-    constexpr int dash_count = 10;
+    const int dash_count = 10;
     string dashes(dash_count, '-');
 
     cout << dashes << "Start Table" << dashes << endl;

@@ -57,7 +57,7 @@ public:
   }
 
   void save_state(float timestep) const {
-    constexpr string filename = "../data.csv";
+    const string filename = "../data.csv";
     bool file_exists = filesystem::exists(filename);
 
     ofstream file(filename, ios::app);
